@@ -9,8 +9,16 @@ import 'package:flutter_local_notification_demo/pages/scheduled_notification_pag
 import 'package:flutter_local_notification_demo/services/notification_data.dart';
 import 'package:flutter_local_notification_demo/services/notification_service.dart';
 import 'package:flutter_local_notification_demo/services/notification_service_impl.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Permission.notification.isDenied.then((value) {
+    if (value) {
+      Permission.notification.request();
+    }
+  });
   runApp(const MyApp());
 }
 
@@ -69,6 +77,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  ///Handle notifications as per your need
+  ///Like redirects or dialogs
   _handleNotification(String payload) {
     final NotificationData notificationData =
         NotificationData.fromJson(jsonDecode(payload));

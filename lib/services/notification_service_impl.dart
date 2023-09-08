@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter_local_notification_demo/services/notification_data.dart';
 import 'package:flutter_local_notification_demo/services/notification_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io' show Directory, File, Platform;
 import 'package:timezone/data/latest.dart' as tz;
@@ -41,11 +41,11 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
 class NotificationServiceImpl implements NotificationService {
   @override
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   @override
   final didReceiveLocalNotificationStream =
-      StreamController<ReceivedNotification>.broadcast();
+  StreamController<ReceivedNotification>.broadcast();
 
   @override
   final selectNotificationStream = StreamController<String?>.broadcast();
@@ -57,10 +57,10 @@ class NotificationServiceImpl implements NotificationService {
     await _configLocalTimezone();
 
     const AndroidInitializationSettings androidInitializationSettings =
-        AndroidInitializationSettings("app_icon");
+    AndroidInitializationSettings("img");
 
     final DarwinInitializationSettings initializationSettingsIOS =
-        DarwinInitializationSettings(
+    DarwinInitializationSettings(
       requestAlertPermission: true,
       onDidReceiveLocalNotification: (id, title, body, payload) {
         didReceiveLocalNotificationStream.add(
@@ -75,7 +75,7 @@ class NotificationServiceImpl implements NotificationService {
     );
 
     final InitializationSettings initializationSettings =
-        InitializationSettings(
+    InitializationSettings(
       android: androidInitializationSettings,
       iOS: initializationSettingsIOS,
       macOS: null,
@@ -86,8 +86,7 @@ class NotificationServiceImpl implements NotificationService {
 
   ///Initialize local notification plugin
   void initializeLocalNotificationPlugin(
-    InitializationSettings initializationSettings,
-  ) {
+      InitializationSettings initializationSettings,) {
     flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (notificationResponse) {
@@ -112,16 +111,24 @@ class NotificationServiceImpl implements NotificationService {
   }
 
   @override
-  void showNotification(
-      NotificationData notificationData, String notificationMessage) async {
+  void showNotification(NotificationData notificationData,
+      String notificationMessage) async {
     await flutterLocalNotificationsPlugin.show(
       notificationData.hashCode,
       "Notifier",
       notificationMessage,
       const NotificationDetails(
-        android: AndroidNotificationDetails("channel_id", "Notification Demo",
-            channelDescription:
-                "Notification to showing demo for local notification in flutter "),
+        android: AndroidNotificationDetails(
+          actions: [
+            AndroidNotificationAction("1", "Open", showsUserInterface: true),
+            AndroidNotificationAction("2", "Close", cancelNotification: true),
+          ],
+          "channel_id",
+          "Notification Demo",
+          channelDescription:
+          "Notification to showing demo for local notification in flutter",
+          importance: Importance.max,
+        ),
         iOS: DarwinNotificationDetails(
           attachments: [],
           threadIdentifier: "thread_id",
@@ -132,11 +139,8 @@ class NotificationServiceImpl implements NotificationService {
   }
 
   @override
-  void scheduleNotification(
-      NotificationData notificationData, String notificationMessage) {
-    print(notificationData.notificationTime.hour);
-    print(notificationData.notificationTime.minute);
-    print("object");
+  void scheduleNotification(NotificationData notificationData,
+      String notificationMessage) {
     flutterLocalNotificationsPlugin.zonedSchedule(
       notificationData.id,
       "Quick brown story",
@@ -149,14 +153,15 @@ class NotificationServiceImpl implements NotificationService {
       const NotificationDetails(
         android: AndroidNotificationDetails("channel_id", "Notification Demo",
             channelDescription:
-                "Notification to showing demo for local notification in flutter "),
+            "Notification to showing demo for local notification in flutter ",
+            importance: Importance.high),
         iOS: DarwinNotificationDetails(
           threadIdentifier: "thread_id",
         ),
       ),
       payload: jsonEncode(notificationData),
       uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
@@ -169,7 +174,7 @@ class NotificationServiceImpl implements NotificationService {
     }
 
     final NotificationAppLaunchDetails? notificationAppLaunchDetails =
-        await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+    await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
 
     if (notificationAppLaunchDetails != null &&
         notificationAppLaunchDetails.didNotificationLaunchApp) {
@@ -199,20 +204,21 @@ class NotificationServiceImpl implements NotificationService {
   }
 
   @override
-  void scheduleNotificationForNextYear(
-      NotificationData notificationData, String notificationMessage) {}
+  void scheduleNotificationForNextYear(NotificationData notificationData,
+      String notificationMessage) {}
 
   tz.TZDateTime _convertTime(int hour, int minute, int sec) {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
 
-    print(now.hour);
-    print(now.minute);
-    print(now.second);
-
     tz.TZDateTime scheduleDate = tz.TZDateTime(
-        tz.local, now.year, now.month, now.day, hour, minute, sec);
+        tz.local,
+        now.year,
+        now.month,
+        now.day,
+        hour,
+        minute,
+        sec);
     if (scheduleDate.isBefore(now)) {
-      print("Is Before");
       scheduleDate = scheduleDate.add(const Duration(days: 1));
     }
 
@@ -221,20 +227,19 @@ class NotificationServiceImpl implements NotificationService {
 
   Future<void> _configLocalTimezone() async {
     tz.initializeTimeZones();
-    final String timeZone = await FlutterNativeTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timeZone));
+    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(currentTimeZone));
   }
 
   Future<void> showLargeIconNotification() async {
     final String largeIconPath =
-        await _downloadAndSaveFile('https://dummyimage.com/48x48', 'largeIcon');
+    await _downloadAndSaveFile('https://dummyimage.com/48x48', 'largeIcon');
     final String bigPicturePath = await _downloadAndSaveFile(
         'https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
         'bigPicture.jpg');
 
-    print(bigPicturePath);
     final BigPictureStyleInformation bigPictureStyleInformation =
-        BigPictureStyleInformation(
+    BigPictureStyleInformation(
       FilePathAndroidBitmap(bigPicturePath),
       largeIcon: FilePathAndroidBitmap(largeIconPath),
       contentTitle: 'overridden <b>big</b> content title',
@@ -243,7 +248,7 @@ class NotificationServiceImpl implements NotificationService {
       htmlFormatSummaryText: true,
     );
     final AndroidNotificationDetails androidNotificationDetails =
-        AndroidNotificationDetails(
+    AndroidNotificationDetails(
       'big text channel id',
       'big text channel name',
       channelDescription: 'big text channel description',
@@ -273,7 +278,7 @@ class NotificationServiceImpl implements NotificationService {
         'https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
         'bigPicture.jpg');
     final DarwinNotificationDetails darwinNotificationDetails =
-        DarwinNotificationDetails(
+    DarwinNotificationDetails(
       attachments: <DarwinNotificationAttachment>[
         DarwinNotificationAttachment(
           bigPicturePath,
@@ -291,32 +296,55 @@ class NotificationServiceImpl implements NotificationService {
   }
 
   Future<void> showNotificationWithClippedThumbnailAttachment() async {
+    var imagePath = "https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80";
+
     final String bigPicturePath = await _downloadAndSaveFile(
-        'https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
-        'bigPicture.jpg');
+        imagePath, 'bigPicture.jpg');
+
+    final BigPictureStyleInformation bigPictureStyleInformation =
+    BigPictureStyleInformation(
+      FilePathAndroidBitmap(bigPicturePath),
+      largeIcon: FilePathAndroidBitmap(bigPicturePath),
+      contentTitle: 'overridden <b>big</b> content title',
+      htmlFormatContentTitle: true,
+      summaryText: 'summary <i>text</i>',
+      htmlFormatSummaryText: true,
+    );
+
+    final AndroidNotificationDetails androidNotificationDetails =
+    AndroidNotificationDetails(
+        'big text channel id', 'big text channel name',
+        channelDescription: 'big text channel description',
+        styleInformation: bigPictureStyleInformation,
+        importance: Importance.max);
+
     final DarwinNotificationDetails darwinNotificationDetails =
-        DarwinNotificationDetails(
+    DarwinNotificationDetails(
       attachments: <DarwinNotificationAttachment>[
         DarwinNotificationAttachment(
           bigPicturePath,
           thumbnailClippingRect:
-              // lower right quadrant of the attachment
-              const DarwinNotificationAttachmentThumbnailClippingRect(
-            x: 0.1,
-            y: 0.1,
-            height: 0.1,
-            width: 0.1,
+          // lower right quadrant of the attachment
+          const DarwinNotificationAttachmentThumbnailClippingRect(
+            x: 0.5,
+            y: 0.5,
+            height: 0.5,
+            width: 0.5,
           ),
         )
       ],
     );
     final NotificationDetails notificationDetails = NotificationDetails(
-        iOS: darwinNotificationDetails, macOS: darwinNotificationDetails);
+      android: androidNotificationDetails,
+      iOS: darwinNotificationDetails,
+      macOS: darwinNotificationDetails,
+    );
     await flutterLocalNotificationsPlugin.show(
-      id++,
-      'notification with attachment title',
-      'notification with attachment body',
-      notificationDetails,
+        id++,
+        'notification with attachment title',
+        'notification with attachment body',
+        notificationDetails,
+        payload: imagePath
     );
   }
 

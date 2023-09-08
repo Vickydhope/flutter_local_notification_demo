@@ -1,3 +1,9 @@
+enum NotificationType {
+  normal,
+  scheduled,
+  image,
+}
+
 class NotificationData {
   final int id;
   final String username;
